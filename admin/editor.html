@@ -371,10 +371,10 @@
   </div>
 
   <script>
-    function showToast(msg) {
+    function showToast(msg, duration) {
       const t = document.getElementById('toast');
       t.textContent = msg; t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2000);
+      setTimeout(() => t.classList.remove('show'), duration || 2000);
     }
 
     async function saveSimple(e, section) {
@@ -383,15 +383,25 @@
       const fd = new FormData(form);
       const updates = {};
       for (let [k, v] of fd.entries()) updates[k] = v;
-      const res = await fetch('/api/save-content', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ section, updates })
-      });
-      if (res.ok) showToast('✅ 保存成功！请到前台刷新查看效果');
-      else showToast('❌ 保存失败');
-    }
-
-    function addService() {
+      try {
+        const res = await fetch('/api/save-content', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ section, updates })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          showToast('✅ 保存成功！请到前台刷新查看效果');
+        } else if (res.status === 401) {
+          showToast('⚠️ 登录已过期，请重新登录', 5000);
+          setTimeout(() => location.href = '/admin', 2000);
+        } else {
+          showToast('❌ 保存失败: ' + (data.error || '未知错误'), 4000);
+        }
+      } catch (err) {
+        showToast('❌ 网络错误，请检查连接后重试', 4000);
+      }
+    
+function addService() {
       const tbody = document.getElementById('itemList') || document.querySelector('tbody');
       const tr = document.createElement('tr');
       tr.innerHTML = `<td><input value="📌" style="width:50px;" class="new-icon"></td>
