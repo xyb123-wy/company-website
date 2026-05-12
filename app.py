@@ -486,5 +486,10 @@ def not_found(e):
 
 
 if __name__ == '__main__':
+    import sys
     init_db()
-    app.run(host='127.0.0.1', port=5000, debug=False)
+    # 本地开发用 127.0.0.1:5000，部署时平台会设置 PORT 环境变量
+    if '--public' in sys.argv:
+        app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
+    else:
+        app.run(host='127.0.0.1', port=5000, debug=False)
