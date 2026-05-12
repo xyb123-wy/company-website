@@ -116,20 +116,40 @@ document.addEventListener('DOMContentLoaded', function () {
   // ===== 联系表单提交 =====
   const contactForm = document.getElementById('contactForm');
 
-  contactForm.addEventListener('submit', function (e) {
+  contactForm.addEventListener('submit', async function (e) {
     e.preventDefault();
     const btn = contactForm.querySelector('.btn-submit');
     const originalText = btn.textContent;
     btn.textContent = '提交中...';
     btn.disabled = true;
 
-    // 模拟提交
-    setTimeout(function () {
-      showToast('感谢您的留言，我们会尽快与您联系！');
-      contactForm.reset();
-      btn.textContent = originalText;
-      btn.disabled = false;
-    }, 1000);
+    const data = {
+      name: document.getElementById('name').value,
+      phone: document.getElementById('phone').value,
+      email: document.getElementById('email').value,
+      service: document.getElementById('service').value,
+      message: document.getElementById('message').value,
+    };
+
+    try {
+      const res = await fetch('/api/submit-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+      if (result.ok) {
+        showToast(result.message || '感谢您的留言，我们会尽快与您联系！');
+        contactForm.reset();
+      } else {
+        showToast('提交失败，请稍后重试');
+      }
+    } catch (err) {
+      showToast('网络错误，请检查网络后重试');
+    }
+
+    btn.textContent = originalText;
+    btn.disabled = false;
   });
 
   // ===== Toast 提示 =====

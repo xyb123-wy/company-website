@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>编辑 - 网站后台</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; background: #f3f4f6; display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 220px; background: #1f2937; color: #d1d5db; padding: 24px 0; display: flex; flex-direction: column;
+    }
+    .sidebar .brand { color: #fff; font-size: 16px; font-weight: 700; padding: 0 20px 24px; border-bottom: 1px solid #374151; margin-bottom: 16px; }
+    .sidebar a { color: #9ca3af; text-decoration: none; padding: 10px 20px; font-size: 14px; display: block; transition: 0.2s; }
+    .sidebar a:hover, .sidebar a.active { color: #fff; background: #374151; }
+    .main { flex: 1; padding: 32px; overflow-y: auto; max-width: 1000px; }
+    .main h1 { font-size: 24px; color: #1f2937; margin-bottom: 24px; }
+    .card { background: #fff; border-radius: 10px; padding: 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    .card h2 { font-size: 16px; margin-bottom: 16px; color: #374151; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: inherit;
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      outline: none; border-color: #1a56db; box-shadow: 0 0 0 3px rgba(26,86,219,0.1);
+    }
+    .btn {
+      padding: 10px 24px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;
+    }
+    .btn-primary { background: #1a56db; color: #fff; }
+    .btn-primary:hover { background: #1e40af; }
+    .btn-danger { background: #dc2626; color: #fff; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-sm { padding: 6px 14px; font-size: 12px; }
+    .btn-success { background: #10b981; color: #fff; }
+    .btn-success:hover { background: #059669; }
+    .toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #10b981; color: #fff;
+      padding: 12px 28px; border-radius: 50px; font-size: 14px; z-index: 9999; display: none;
+    }
+    .toast.show { display: block; animation: fadeIn 0.3s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid #e5e7eb; }
+    th { font-weight: 600; color: #6b7280; font-size: 13px; background: #f9fafb; }
+    .img-thumb { width: 60px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer; }
+    .upload-area {
+      border: 2px dashed #d1d5db; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s;
+      color: #6b7280; font-size: 14px; margin-bottom: 12px;
+    }
+    .upload-area:hover { border-color: #1a56db; color: #1a56db; }
+    .flex-row { display: flex; gap: 12px; align-items: center; }
+    .empty-msg { text-align: center; color: #9ca3af; padding: 20px; font-size: 14px; }
+    .section-nav { margin-bottom: 12px; }
+    .section-nav a { color: #1a56db; font-size: 13px; text-decoration: none; }
+    .msg-card { border-left: 3px solid #1a56db; padding: 14px 18px; background: #f9fafb; border-radius: 0 8px 8px 0; margin-bottom: 12px; }
+    .msg-card .meta { font-size: 12px; color: #9ca3af; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <nav class="sidebar">
+    <div class="brand">苏州清韵项目管理<br>网站后台</div>
+    <a href="/admin/dashboard">📋 仪表盘</a>
+    <a href="/admin/edit/hero" class="{{ 'active' if section=='hero' }}">🏠 首页横幅</a>
+    <a href="/admin/edit/about" class="{{ 'active' if section=='about' }}">ℹ️ 关于我们</a>
+    <a href="/admin/edit/services" class="{{ 'active' if section=='services' }}">🔧 服务项目</a>
+    <a href="/admin/edit/cases" class="{{ 'active' if section=='cases' }}">📁 客户案例</a>
+    <a href="/admin/edit/news" class="{{ 'active' if section=='news' }}">📰 新闻动态</a>
+    <a href="/admin/edit/contact" class="{{ 'active' if section=='contact' }}">📞 联系我们</a>
+    <a href="/admin/edit/footer" class="{{ 'active' if section=='footer' }}">📄 页脚设置</a>
+    <a href="/admin/edit/settings" class="{{ 'active' if section=='settings' }}">⚙️ 站点设置</a>
+    <a href="/admin/edit/messages" class="{{ 'active' if section=='messages' }}">✉️ 用户留言</a>
+    <a href="/" target="_blank" style="color:#60a5fa;">👁 查看前台</a>
+    <form action="/admin/logout" method="get" style="margin-top: auto;">
+      <button type="submit" class="btn btn-danger" style="width:100%;border-radius:0;">退出 ({{ current_user.username }})</button>
+    </form>
+  </nav>
+  <div class="main">
+    <div class="section-nav"><a href="/admin/dashboard">← 返回仪表盘</a></div>
+    <div class="toast" id="toast"></div>
+
+    <!-- ===== 首页横幅 ===== -->
+    {% if section == 'hero' %}
+    <h1>🏠 编辑首页横幅</h1>
+    <div class="card">
+      <h2>横幅内容</h2>
+      <form id="editForm" onsubmit="saveSimple(event, 'hero')">
+        <div class="form-group">
+          <label>标题</label>
+          <input type="text" name="title" value="{{ data.content.title }}">
+        </div>
+        <div class="form-group">
+          <label>副标题</label>
+          <textarea name="subtitle" rows="2">{{ data.content.subtitle }}</textarea>
+        </div>
+        <h3 style="font-size:14px;color:#6b7280;margin:20px 0 12px;">统计数字</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div><label style="font-size:12px;">数字1</label><input type="text" name="stat1_num" value="{{ data.content.stat1_num }}"></div>
+          <div><label style="font-size:12px;">标签1</label><input type="text" name="stat1_label" value="{{ data.content.stat1_label }}"></div>
+          <div><label style="font-size:12px;">数字2</label><input type="text" name="stat2_num" value="{{ data.content.stat2_num }}"></div>
+          <div><label style="font-size:12px;">标签2</label><input type="text" name="stat2_label" value="{{ data.content.stat2_label }}"></div>
+          <div><label style="font-size:12px;">数字3</label><input type="text" name="stat3_num" value="{{ data.content.stat3_num }}"></div>
+          <div><label style="font-size:12px;">标签3</label><input type="text" name="stat3_label" value="{{ data.content.stat3_label }}"></div>
+          <div><label style="font-size:12px;">数字4</label><input type="text" name="stat4_num" value="{{ data.content.stat4_num }}"></div>
+          <div><label style="font-size:12px;">标签4</label><input type="text" name="stat4_label" value="{{ data.content.stat4_label }}"></div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top:20px;">💾 保存</button>
+      </form>
+    </div>
+
+    <!-- ===== 关于我们 ===== -->
+    {% elif section == 'about' %}
+    <h1>ℹ️ 编辑关于我们</h1>
+    <div class="card">
+      <h2>关于我们图片</h2>
+      <div style="display:flex;align-items:start;gap:16px;margin-bottom:16px;">
+        {% set about_img = data.content.get('about_image', '') %}
+        {% if about_img %}
+        <img src="/uploads/{{ about_img }}" alt="关于我们图片" style="width:300px;height:200px;object-fit:cover;border-radius:6px;">
+        {% endif %}
+        <div style="flex:1;">
+          <label class="btn btn-primary" style="cursor:pointer;display:inline-block;">📷 上传图片
+            <input type="file" accept="image/*" style="display:none" onchange="uploadSectionImage(this, 'settings', 'about_image', 'aboutImgPreview')">
+          </label>
+          <img id="aboutImgPreview" src="" style="display:none;max-width:300px;max-height:200px;margin-top:10px;border-radius:6px;object-fit:cover;">
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <form id="editForm" onsubmit="saveSimple(event, '{{ section }}')">
+        {% for key, val in data.content.items() %}
+        {% if key != 'about_image' %}
+        <div class="form-group">
+          <label>{{ key }}</label>
+          {% if val and val|length > 50 %}
+          <textarea name="{{ key }}" rows="3">{{ val }}</textarea>
+          {% else %}
+          <input type="text" name="{{ key }}" value="{{ val }}">
+          {% endif %}
+        </div>
+        {% endif %}
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">💾 保存</button>
+      </form>
+    </div>
+
+    <!-- ===== 页脚 ===== -->
+    {% elif section == 'footer' %}
+    <h1>📄 编辑页脚设置</h1>
+    <div class="card">
+      <form id="editForm" onsubmit="saveSimple(event, '{{ section }}')">
+        {% for key, val in data.content.items() %}
+        <div class="form-group">
+          <label>{{ key }}</label>
+          {% if val and val|length > 50 %}
+          <textarea name="{{ key }}" rows="3">{{ val }}</textarea>
+          {% else %}
+          <input type="text" name="{{ key }}" value="{{ val }}">
+          {% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">💾 保存</button>
+      </form>
+    </div>
+    {% if section == 'footer' %}
+    <div class="card">
+      <h2>微信公众号二维码</h2>
+      <div style="display:flex;align-items:start;gap:16px;">
+        {% set qr_img = data.content.get('footer_qr', '') %}
+        {% if qr_img %}
+        <img src="/uploads/{{ qr_img }}" alt="二维码" style="width:120px;height:120px;object-fit:contain;border-radius:6px;">
+        {% endif %}
+        <div style="flex:1;">
+          <label class="btn btn-primary" style="cursor:pointer;display:inline-block;">📷 上传二维码
+            <input type="file" accept="image/*" style="display:none" onchange="uploadSectionImage(this, 'settings', 'footer_qr', 'qrPreview')">
+          </label>
+          <img id="qrPreview" src="" style="display:none;max-width:120px;border-radius:6px;margin-top:8px;">
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ===== 服务项目 ===== -->
+    {% elif section == 'services' %}
+    <h1>🔧 管理服务项目</h1>
+    <button class="btn btn-primary" onclick="addService()" style="margin-bottom:16px;">+ 新增服务</button>
+    <div class="card">
+      <table>
+        <thead><tr><th>图标</th><th>标题</th><th>描述</th><th>排序</th><th>操作</th></tr></thead>
+        <tbody id="itemList">
+          {% for s in data.services %}
+          <tr data-id="{{ s.id }}">
+            <td><input type="text" value="{{ s.icon }}" style="width:50px;" onchange="updateField('services',{{ s.id }},'icon',this.value)"></td>
+            <td><input type="text" value="{{ s.title }}" style="width:150px;" onchange="updateField('services',{{ s.id }},'title',this.value)"></td>
+            <td><input type="text" value="{{ s.description or '' }}" style="width:300px;" onchange="updateField('services',{{ s.id }},'description',this.value)"></td>
+            <td><input type="number" value="{{ s.sort_order }}" style="width:60px;" onchange="updateField('services',{{ s.id }},'sort_order',this.value)"></td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteItem('services',{{ s.id }})">删除</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===== 客户案例 ===== -->
+    {% elif section == 'cases' %}
+    <h1>📁 管理客户案例</h1>
+    <button class="btn btn-primary" onclick="addCase()" style="margin-bottom:16px;">+ 新增案例</button>
+    <div class="card">
+      <table>
+        <thead><tr><th>图片</th><th>分类</th><th>标题</th><th>描述</th><th>排序</th><th>操作</th></tr></thead>
+        <tbody id="itemList">
+          {% for c in data.cases %}
+          <tr data-id="{{ c.id }}">
+            <td>
+              {% if c.image_path %}
+              <img src="/uploads/{{ c.image_path }}" class="img-thumb" onclick="document.getElementById('caseImg{{ c.id }}').click()">
+              {% else %}
+              <span style="font-size:24px;cursor:pointer;" onclick="document.getElementById('caseImg{{ c.id }}').click()">🏗️</span>
+              {% endif %}
+              <input type="file" id="caseImg{{ c.id }}" accept="image/*" style="display:none" onchange="uploadCaseImage(this, {{ c.id }})">
+            </td>
+            <td>
+              <select onchange="updateField('cases',{{ c.id }},'category',this.value)">
+                <option value="building" {% if c.category=='building' %}selected{% endif %}>房屋建筑</option>
+                <option value="municipal" {% if c.category=='municipal' %}selected{% endif %}>市政工程</option>
+                <option value="industrial" {% if c.category=='industrial' %}selected{% endif %}>工业项目</option>
+              </select>
+            </td>
+            <td><input type="text" value="{{ c.title }}" style="width:160px;" onchange="updateField('cases',{{ c.id }},'title',this.value)"></td>
+            <td><input type="text" value="{{ c.description or '' }}" style="width:220px;" onchange="updateField('cases',{{ c.id }},'description',this.value)"></td>
+            <td><input type="number" value="{{ c.sort_order }}" style="width:60px;" onchange="updateField('cases',{{ c.id }},'sort_order',this.value)"></td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteItem('cases',{{ c.id }})">删除</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===== 新闻动态 ===== -->
+    {% elif section == 'news' %}
+    <h1>📰 管理新闻动态</h1>
+    <button class="btn btn-primary" onclick="addNews()" style="margin-bottom:16px;">+ 新增新闻</button>
+    <div class="card">
+      <table>
+        <thead><tr><th>图片</th><th>日期</th><th>标题</th><th>摘要</th><th>排序</th><th>操作</th></tr></thead>
+        <tbody id="itemList">
+          {% for n in data.news %}
+          <tr data-id="{{ n.id }}">
+            <td>
+              {% if n.image_path %}
+              <img src="/uploads/{{ n.image_path }}" class="img-thumb" onclick="document.getElementById('newsImg{{ n.id }}').click()">
+              {% else %}
+              <span style="font-size:20px;cursor:pointer;" onclick="document.getElementById('newsImg{{ n.id }}').click()">📷</span>
+              {% endif %}
+              <input type="file" id="newsImg{{ n.id }}" accept="image/*" style="display:none" onchange="uploadNewsImage(this, {{ n.id }})">
+            </td>
+            <td><input type="date" value="{{ n.date }}" style="width:140px;" onchange="updateField('news',{{ n.id }},'date',this.value)"></td>
+            <td><input type="text" value="{{ n.title }}" style="width:200px;" onchange="updateField('news',{{ n.id }},'title',this.value)"></td>
+            <td><textarea style="width:220px;height:40px;font-size:12px;" onchange="updateField('news',{{ n.id }},'summary',this.value)">{{ n.summary or '' }}</textarea></td>
+            <td><input type="number" value="{{ n.sort_order }}" style="width:60px;" onchange="updateField('news',{{ n.id }},'sort_order',this.value)"></td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteItem('news',{{ n.id }})">删除</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===== 联系我们 ===== -->
+    {% elif section == 'contact' %}
+    <h1>📞 管理联系方式</h1>
+    <button class="btn btn-primary" onclick="addContact()" style="margin-bottom:16px;">+ 新增联系方式</button>
+    <div class="card">
+      <table>
+        <thead><tr><th>图标</th><th>标签</th><th>内容</th><th>排序</th><th>操作</th></tr></thead>
+        <tbody id="itemList">
+          {% for c in data.contact %}
+          <tr data-id="{{ c.id }}">
+            <td><input type="text" value="{{ c.icon }}" style="width:50px;" onchange="updateField('contact',{{ c.id }},'icon',this.value)"></td>
+            <td><input type="text" value="{{ c.label }}" style="width:100px;" onchange="updateField('contact',{{ c.id }},'label',this.value)"></td>
+            <td><input type="text" value="{{ c.value }}" style="width:300px;" onchange="updateField('contact',{{ c.id }},'value',this.value)"></td>
+            <td><input type="number" value="{{ c.sort_order }}" style="width:60px;" onchange="updateField('contact',{{ c.id }},'sort_order',this.value)"></td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteItem('contact',{{ c.id }})">删除</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===== 用户留言 ===== -->
+    {% elif section == 'messages' %}
+    <h1>✉️ 用户留言</h1>
+    <div class="card">
+      {% if data.messages %}
+      {% for m in data.messages %}
+      <div class="msg-card">
+        <div style="display:flex;justify-content:space-between;align-items:start;">
+          <div>
+            <strong>{{ m.name }}</strong>
+            <span style="color:#6b7280;font-size:13px;margin-left:12px;">{{ m.phone }}</span>
+            <span style="color:#9ca3af;font-size:12px;margin-left:8px;">{{ m.email }}</span>
+            {% if m.service_type %}
+            <span class="badge" style="background:#dbeafe;color:#1a56db;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:8px;">{{ m.service_type }}</span>
+            {% endif %}
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteMessage({{ m.id }})">删除</button>
+        </div>
+        <p style="margin-top:8px;color:#374151;">{{ m.content }}</p>
+        <p class="meta">{{ m.created_at }}</p>
+      </div>
+      {% endfor %}
+      {% else %}
+      <p class="empty-msg">暂无留言</p>
+      {% endif %}
+    </div>
+
+    <!-- ===== 站点设置 ===== -->
+    {% elif section == 'settings' %}
+    <h1>⚙️ 站点设置</h1>
+    <div class="card">
+      <h2>公司标志 (Logo)</h2>
+      <div class="form-group">
+        <label>标志文字（如不上传图片则显示此文字）</label>
+        <input type="text" id="logoText" value="{{ data.content.get('logo_text', 'QY') }}" onchange="updateSettingsField('logo_text', this.value)">
+      </div>
+      <div style="display:flex;align-items:start;gap:16px;">
+        {% set logo_img = data.content.get('logo_image', '') %}
+        {% if logo_img %}
+        <img src="/uploads/{{ logo_img }}" alt="Logo" style="width:80px;height:80px;object-fit:contain;border-radius:6px;border:1px solid #e5e7eb;">
+        {% endif %}
+        <div>
+          <label class="btn btn-primary" style="cursor:pointer;display:inline-block;">📷 上传标志图片
+            <input type="file" accept="image/*" style="display:none" onchange="uploadSectionImage(this, 'settings', 'logo_image', 'logoPreview')">
+          </label>
+          <img id="logoPreview" src="" style="display:none;max-width:80px;max-height:80px;margin-top:8px;border-radius:6px;">
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>关于我们图片</h2>
+      <div style="display:flex;align-items:start;gap:16px;">
+        {% set about_img = data.content.get('about_image', '') %}
+        {% if about_img %}
+        <img src="/uploads/{{ about_img }}" alt="关于我们图片" style="width:300px;height:200px;object-fit:cover;border-radius:6px;">
+        {% endif %}
+        <div>
+          <label class="btn btn-primary" style="cursor:pointer;display:inline-block;">📷 上传图片
+            <input type="file" accept="image/*" style="display:none" onchange="uploadSectionImage(this, 'settings', 'about_image', 'aboutImgPreview')">
+          </label>
+          <img id="aboutImgPreview" src="" style="display:none;max-width:300px;max-height:200px;margin-top:8px;border-radius:6px;object-fit:cover;">
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>微信公众号二维码</h2>
+      <div style="display:flex;align-items:start;gap:16px;">
+        {% set qr_img = data.content.get('footer_qr', '') %}
+        {% if qr_img %}
+        <img src="/uploads/{{ qr_img }}" alt="二维码" style="width:120px;height:120px;object-fit:contain;border-radius:6px;border:1px solid #e5e7eb;">
+        {% endif %}
+        <div>
+          <label class="btn btn-primary" style="cursor:pointer;display:inline-block;">📷 上传二维码
+            <input type="file" accept="image/*" style="display:none" onchange="uploadSectionImage(this, 'settings', 'footer_qr', 'qrPreview')">
+          </label>
+          <img id="qrPreview" src="" style="display:none;max-width:120px;border-radius:6px;margin-top:8px;">
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <script>
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    async function saveSimple(e, section) {
+      e.preventDefault();
+      const form = document.getElementById('editForm');
+      const fd = new FormData(form);
+      const updates = {};
+      for (let [k, v] of fd.entries()) updates[k] = v;
+      const res = await fetch('/api/save-content', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section, updates })
+      });
+      if (res.ok) showToast('✅ 保存成功！请到前台刷新查看效果');
+      else showToast('❌ 保存失败');
+    }
+
+    function addService() {
+      const tbody = document.getElementById('itemList') || document.querySelector('tbody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><input value="📌" style="width:50px;" class="new-icon"></td>
+        <td><input placeholder="标题" style="width:150px;" class="new-title"></td>
+        <td><input placeholder="描述" style="width:300px;" class="new-desc"></td>
+        <td><input type="number" value="99" style="width:60px;" class="new-sort"></td>
+        <td><button class="btn btn-success btn-sm" onclick="saveNewService(this)">保存</button></td>`;
+      tbody.appendChild(tr);
+    }
+
+    async function saveNewService(btn) {
+      const row = btn.closest('tr');
+      const data = {
+        icon: row.querySelector('.new-icon').value,
+        title: row.querySelector('.new-title').value,
+        description: row.querySelector('.new-desc').value,
+        sort_order: parseInt(row.querySelector('.new-sort').value)
+      };
+      const res = await fetch('/api/services', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+      });
+      if (res.ok) { location.reload(); } else { showToast('❌ 添加失败'); }
+    }
+
+    async function updateField(type, id, field, value) {
+      await fetch('/api/' + type, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, [field]: value })
+      });
+    }
+
+    async function deleteItem(type, id) {
+      if (!confirm('确定删除？')) return;
+      await fetch('/api/' + type + '?id=' + id, { method: 'DELETE' });
+      location.reload();
+    }
+
+    async function addNews() {
+      const tbody = document.getElementById('itemList') || document.querySelector('tbody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><input type="date" class="new-date" style="width:140px;"></td>
+        <td><input placeholder="标题" style="width:250px;" class="new-title"></td>
+        <td><input placeholder="摘要" style="width:280px;" class="new-summary"></td>
+        <td><input type="number" value="99" style="width:60px;" class="new-sort"></td>
+        <td><button class="btn btn-success btn-sm" onclick="saveNewNews(this)">保存</button></td>`;
+      tbody.appendChild(tr);
+    }
+
+    async function saveNewNews(btn) {
+      const row = btn.closest('tr');
+      const data = {
+        date: row.querySelector('.new-date').value,
+        title: row.querySelector('.new-title').value,
+        summary: row.querySelector('.new-summary').value,
+        sort_order: parseInt(row.querySelector('.new-sort').value)
+      };
+      const res = await fetch('/api/news', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+      });
+      if (res.ok) { location.reload(); } else { showToast('❌ 添加失败'); }
+    }
+
+    function addCase() {
+      const tbody = document.getElementById('itemList') || document.querySelector('tbody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><span style="font-size:12px;color:#9ca3af;">保存后上传</span></td>
+        <td><select class="new-cat"><option value="building">房屋建筑</option><option value="municipal">市政工程</option><option value="industrial">工业项目</option></select></td>
+        <td><input placeholder="标题" style="width:160px;" class="new-title"></td>
+        <td><input placeholder="描述" style="width:220px;" class="new-desc"></td>
+        <td><input type="number" value="99" style="width:60px;" class="new-sort"></td>
+        <td><button class="btn btn-success btn-sm" onclick="saveNewCase(this)">保存</button></td>`;
+      tbody.appendChild(tr);
+    }
+
+    async function saveNewCase(btn) {
+      const row = btn.closest('tr');
+      const data = {
+        category: row.querySelector('.new-cat').value,
+        title: row.querySelector('.new-title').value,
+        description: row.querySelector('.new-desc').value,
+        sort_order: parseInt(row.querySelector('.new-sort').value)
+      };
+      const res = await fetch('/api/cases', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+      });
+      if (res.ok) { location.reload(); } else { showToast('❌ 添加失败'); }
+    }
+
+    function addContact() {
+      const tbody = document.getElementById('itemList') || document.querySelector('tbody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><input value="📌" style="width:50px;" class="new-icon"></td>
+        <td><input placeholder="标签" style="width:100px;" class="new-label"></td>
+        <td><input placeholder="内容" style="width:300px;" class="new-value"></td>
+        <td><input type="number" value="99" style="width:60px;" class="new-sort"></td>
+        <td><button class="btn btn-success btn-sm" onclick="saveNewContact(this)">保存</button></td>`;
+      tbody.appendChild(tr);
+    }
+
+    async function saveNewContact(btn) {
+      const row = btn.closest('tr');
+      const data = {
+        icon: row.querySelector('.new-icon').value,
+        label: row.querySelector('.new-label').value,
+        value: row.querySelector('.new-value').value,
+        sort_order: parseInt(row.querySelector('.new-sort').value)
+      };
+      const res = await fetch('/api/contact', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+      });
+      if (res.ok) { location.reload(); } else { showToast('❌ 添加失败'); }
+    }
+
+    async function uploadCaseImage(input, caseId) {
+      const file = input.files[0];
+      if (!file) return;
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('section', 'cases');
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.ok) {
+        await updateField('cases', caseId, 'image_path', data.filename);
+        showToast('✅ 图片上传成功！');
+        location.reload();
+      } else {
+        showToast('❌ ' + (data.error || '上传失败'));
+      }
+    }
+
+    async function uploadImage(input, section) {
+      const file = input.files[0];
+      if (!file) return;
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('section', section);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.ok) {
+        showToast('✅ 上传成功！');
+        document.getElementById('qrPreview').src = data.url;
+        document.getElementById('qrPreview').style.display = 'block';
+      } else {
+        showToast('❌ ' + (data.error || '上传失败'));
+      }
+    }
+
+    async function deleteMessage(id) {
+      if (!confirm('确定删除？')) return;
+      await fetch('/api/messages?id=' + id, { method: 'DELETE' });
+      location.reload();
+    }
+
+    async function uploadNewsImage(input, newsId) {
+      const file = input.files[0];
+      if (!file) return;
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('section', 'news');
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.ok) {
+        await updateField('news', newsId, 'image_path', data.filename);
+        showToast('✅ 图片上传成功！');
+        location.reload();
+      } else {
+        showToast('❌ ' + (data.error || '上传失败'));
+      }
+    }
+
+    async function uploadSectionImage(input, section, fieldKey, previewId) {
+      const file = input.files[0];
+      if (!file) return;
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('section', section);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.ok) {
+        await fetch('/api/save-content', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ section, updates: { [fieldKey]: data.filename } })
+        });
+        showToast('✅ 上传并保存成功！');
+        location.reload();
+      } else {
+        showToast('❌ ' + (data.error || '上传失败'));
+      }
+    }
+
+    async function updateSettingsField(key, value) {
+      await fetch('/api/save-content', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section: 'settings', updates: { [key]: value } })
+      });
+    }
+  </script>
+</body>
+</html>
