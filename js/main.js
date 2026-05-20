@@ -77,8 +77,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // ===== 数字递增动画 =====
-  const statNumbers = document.querySelectorAll('.stat-number');
+  // ===== 数字显示动画（不修改服务端渲染的数值） =====
+  const statNums = document.querySelectorAll('.stat-num');
   let statsAnimated = false;
 
   function animateStats() {
@@ -88,24 +88,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const rect = heroStats.getBoundingClientRect();
     if (rect.top < window.innerHeight && rect.bottom > 0) {
       statsAnimated = true;
-      statNumbers.forEach(el => {
-        const target = parseInt(el.dataset.count);
-        const duration = 2000;
-        const start = performance.now();
-
-        function update(now) {
-          const elapsed = now - start;
-          const progress = Math.min(elapsed / duration, 1);
-          const eased = 1 - Math.pow(1 - progress, 3); // ease-out
-          el.textContent = Math.floor(target * eased);
-          if (progress < 1) {
-            requestAnimationFrame(update);
-          } else {
-            el.textContent = target;
-          }
-        }
-
-        requestAnimationFrame(update);
+      statNums.forEach((el, i) => {
+        // 只加渐入动画 class，不修改文本内容
+        el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+        el.style.transitionDelay = (i * 0.15) + 's';
+        el.classList.add('stat-animated');
       });
     }
   }

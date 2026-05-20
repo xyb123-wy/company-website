@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ content.get('hero_title', '苏州清韵项目管理有限公司') }}</title>
   <meta name="description" content="{{ content.get('hero_subtitle', '') }}">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=20260520">
 </head>
 <body>
 
@@ -42,19 +42,19 @@
       <p class="hero-subtitle">{{ content.get('hero_subtitle', '') }}</p>
       <div class="hero-stats">
         <div class="stat-item">
-          <span class="stat-num">{{ content.get('hero_stat1_num', '200') }}</span>
+          <span class="stat-num" id="stat1">{{ content.get('hero_stat1_num', '200') }}</span>
           <span class="stat-label">{{ content.get('hero_stat1_label', '服务客户') }}</span>
         </div>
         <div class="stat-item">
-          <span class="stat-num">{{ content.get('hero_stat2_num', '500') }}</span>
+          <span class="stat-num" id="stat2">{{ content.get('hero_stat2_num', '500') }}</span>
           <span class="stat-label">{{ content.get('hero_stat2_label', '完成项目') }}</span>
         </div>
         <div class="stat-item">
-          <span class="stat-num">{{ content.get('hero_stat3_num', '98') }}</span>
+          <span class="stat-num" id="stat3">{{ content.get('hero_stat3_num', '98') }}</span>
           <span class="stat-label">{{ content.get('hero_stat3_label', '客户满意度(%)') }}</span>
         </div>
         <div class="stat-item">
-          <span class="stat-num">{{ content.get('hero_stat4_num', '15') }}</span>
+          <span class="stat-num" id="stat4">{{ content.get('hero_stat4_num', '15') }}</span>
           <span class="stat-label">{{ content.get('hero_stat4_label', '行业经验(年)') }}</span>
         </div>
       </div>
@@ -218,7 +218,7 @@
     </div>
   </footer>
 
-  <script src="js/main.js"></script>
+  <script src="js/main.js?v=20260520"></script>
   <script>
     // 留言表单提交
     document.getElementById('messageForm').addEventListener('submit', async function(e) {

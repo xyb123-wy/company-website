@@ -400,8 +400,9 @@
       } catch (err) {
         showToast('❌ 网络错误，请检查连接后重试', 4000);
       }
-    
-function addService() {
+    }
+
+    function addService() {
       const tbody = document.getElementById('itemList') || document.querySelector('tbody');
       const tr = document.createElement('tr');
       tr.innerHTML = `<td><input value="📌" style="width:50px;" class="new-icon"></td>

@@ -247,6 +247,10 @@ img { max-width: 100%; }
   width: 100%;
   padding: 40px 0;
   background: rgba(0,0,0,0.15);
+  display: flex;
+  justify-content: center;
+  gap: 80px;
+  flex-wrap: wrap;
 }
 
 .stats-row {
@@ -262,8 +266,9 @@ img { max-width: 100%; }
   font-weight: 700;
 }
 
-.stat-item span { font-size: 36px; }
-.stat-item p {
+.stat-num { font-size: 36px; }
+.stat-label {
+  display: block;
   font-size: 14px;
   font-weight: 400;
   opacity: 0.8;
