@@ -88,18 +88,6 @@ def generate_html():
     hl = comp.get('highlights', [])
     hl_html = '\n'.join(f'              <div class="highlight-item"><span class="highlight-icon">&#9989;</span><span>{html.escape(h)}</span></div>' for h in hl[:4])
 
-    # Render stats
-    stats_html = ''
-    for st in stats[:4]:
-        val = str(st.get('value', 0))
-        sfx = str(st.get('suffix', ''))
-        lbl = html.escape(st.get('label', ''))
-        stats_html += f'''        <div class="stat-item">
-          <span class="stat-number" data-count="{val}">{val}</span><span>{sfx}</span>
-          <p>{lbl}</p>
-        </div>
-'''
-
     # Render cases filter buttons
     cat_btns = '<button class="filter-btn active" data-filter="all">全部</button>'
     for cat, name in [('building','房屋建筑'),('municipal','市政工程'),('industrial','工业项目')]:
@@ -190,11 +178,6 @@ def generate_html():
       <div class="hero-btns">
         <a href="#services" class="btn btn-primary">了解服务</a>
         <a href="#contact" class="btn btn-outline">联系咨询</a>
-      </div>
-    </div>
-    <div class="hero-stats">
-      <div class="container stats-row">
-{stats_html}
       </div>
     </div>
   </section>
