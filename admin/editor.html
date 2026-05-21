@@ -443,10 +443,11 @@
     async function addNews() {
       const tbody = document.getElementById('itemList') || document.querySelector('tbody');
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td><input type="date" class="new-date" style="width:140px;"></td>
+      const today = new Date().toISOString().split('T')[0];
+      tr.innerHTML = `<td><input type="date" class="new-date" style="width:140px;" value="${today}"></td>
         <td><input placeholder="标题" style="width:250px;" class="new-title"></td>
         <td><input placeholder="摘要" style="width:280px;" class="new-summary"></td>
-        <td><input type="number" value="99" style="width:60px;" class="new-sort"></td>
+        <td><input type="number" value="0" style="width:60px;" class="new-sort"></td>
         <td><button class="btn btn-success btn-sm" onclick="saveNewNews(this)">保存</button></td>`;
       tbody.appendChild(tr);
     }

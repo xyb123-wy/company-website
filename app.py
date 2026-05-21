@@ -94,7 +94,7 @@ def index():
     conn = get_db()
     services = conn.execute('SELECT * FROM services ORDER BY sort_order').fetchall()
     cases = conn.execute('SELECT * FROM cases ORDER BY sort_order').fetchall()
-    news = conn.execute('SELECT * FROM news ORDER BY sort_order').fetchall()
+    news = conn.execute('SELECT * FROM news ORDER BY date DESC').fetchall()
     contact = conn.execute('SELECT * FROM contact_info ORDER BY sort_order').fetchall()
     content = {}
     for row in conn.execute('SELECT section, field_key, content FROM site_content').fetchall():
@@ -167,7 +167,7 @@ def admin_edit(section):
             'SELECT * FROM cases ORDER BY sort_order').fetchall()}
     elif section == 'news':
         data = {'news': conn.execute(
-            'SELECT * FROM news ORDER BY sort_order').fetchall()}
+            'SELECT * FROM news ORDER BY date DESC').fetchall()}
     elif section == 'contact':
         data = {'contact': conn.execute(
             'SELECT * FROM contact_info ORDER BY sort_order').fetchall()}
@@ -293,7 +293,7 @@ def api_cases():
 def api_news():
     conn = get_db()
     if request.method == 'GET':
-        rows = conn.execute('SELECT * FROM news ORDER BY sort_order').fetchall()
+        rows = conn.execute('SELECT * FROM news ORDER BY date DESC').fetchall()
         conn.close()
         return jsonify([dict(r) for r in rows])
 
@@ -302,7 +302,7 @@ def api_news():
         conn.execute(
             'INSERT INTO news (date, title, summary, image_path, sort_order) VALUES (?, ?, ?, ?, ?)',
             (data.get('date', ''), data['title'], data.get('summary', ''),
-             data.get('image_path', ''), data.get('sort_order', 99)))
+             data.get('image_path', ''), data.get('sort_order', 0)))
         conn.commit()
         conn.close()
         return jsonify({'ok': True})
